@@ -1,0 +1,54 @@
+/*大概说一下实现的思路，以及我下面写的代码的作用
+* 1.将4则表达式表达式转化为一个语法树，深度较深的点优先级别越高，这一步将所有的括号都去除
+* 2.使用访问者模式，针对语法树上不同类型的结点，实现不同的操作，这一步添上所有必要的括号，将结果记录在访问者类中
+* 这里实现2
+* */
+#include "visitor.h"
+//TODO
+
+// 将数字结点的值转为字符串并保存。（数字位数，和正负全都没有去考虑...)
+void ExpressionPointer::Visit(NumberExpression* node)
+{
+	if(node == NULL) return;
+  this->result += (node->Value + '0');
+  return;
+}
+
+// 将符号结点下的整个表达式转为字符串
+void ExpressionPointer::Visit(BinaryExpression* node)
+{
+	  if(node == NULL) return;
+    char c = GetOp(node->Op);
+    char f_c = node->father_op;
+    //printf("c = %c, f_c = %c is_left = %d\n", c, f_c, node->IsLeft);
+    
+    
+    // 判断当前结点是否需要加括号
+    int flag = 0;
+    if(f_c != '+' && f_c != '-' && f_c != '*' && f_c != '/'){
+    }else if(f_c == '*' || f_c == '/'){
+        if(c == '+' || c == '-') flag = 1;
+        else if(f_c == '/' && node->IsLeft == 0){
+            flag = 1;
+        }
+    }else if(f_c == '-' && node->IsLeft == 0){
+        flag = 1;
+    }
+    
+    //中序遍历
+    if(flag){
+        this->result += '(';
+    }
+    node->First->father_op = c;
+    node->First->IsLeft = 1;
+    node->First->Accept(this);
+    this->result += c;
+    node->Second->father_op = c;
+    node->Second->IsLeft = 0;
+    node->Second->Accept(this);
+    if(flag){
+        this->result += ')';
+    }
+    node->father_op = '-';
+    return;
+}
